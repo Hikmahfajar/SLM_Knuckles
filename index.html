@@ -2,307 +2,526 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="stylesheet" href="css/leaflet.css">
-    <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
     <link rel="stylesheet" href="css/qgis2web.css">
     <link rel="stylesheet" href="css/fontawesome-all.min.css">
     <link rel="stylesheet" href="css/leaflet-measure.css">
     <style>
     html, body, #map { width: 100%; height: 100%; padding: 0; margin: 0; }
-    .legend-control { background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-family: Arial, sans-serif; min-width: 320px; max-width: 380px; }
-    .legend-header { background: linear-gradient(135deg, #1e40af, #3b82f6); color: #fff; padding: 10px 12px; font-weight: bold; font-size: 13px; border-radius: 8px 8px 0 0; }
+    .legend-control {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+        font-family: Arial, sans-serif;
+        min-width: 320px;
+        max-width: 380px;
+    }
+    .legend-header {
+        background: linear-gradient(135deg, #1e40af, #3b82f6);
+        color: #fff;
+        padding: 10px 12px;
+        font-weight: bold;
+        font-size: 13px;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
     .legend-content { max-height: 65vh; overflow-y: auto; padding: 6px; }
-    .legend-group { margin-bottom: 4px; border: 1px solid #e5e7eb; border-radius: 5px; }
-    .group-header { background: #f3f4f6; padding: 6px 8px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 600; }
+    .legend-group { margin-bottom: 4px; border: 1px solid #e5e7eb; border-radius: 5px; overflow: hidden; }
+    .group-header {
+        background: #f3f4f6;
+        padding: 6px 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11px;
+        font-weight: 700;
+        color: #1f2937;
+        user-select: none;
+    }
     .group-header:hover { background: #e5e7eb; }
     .group-items { padding: 4px 6px; }
     .group-items.hidden { display: none; }
-    .layer-item { display: flex; align-items: center; gap: 5px; padding: 3px 2px; font-size: 10px; cursor: pointer; }
-    .layer-item:hover { background: #f9fafb; border-radius: 3px; }
-    .layer-item input { width: 12px; height: 12px; accent-color: #2563eb; }
-    .layer-item label { flex: 1; cursor: pointer; color: #374151; }
-    .sym-pt { width: 10px; height: 10px; border-radius: 50%; border: 1px solid #333; }
-    .sym-ln { width: 16px; height: 3px; border-radius: 1px; }
-    .sym-pg { width: 10px; height: 10px; border: 1px solid #333; }
-    .sym-rs { width: 10px; height: 10px; border-radius: 2px; border: 1px solid #ccc; }
-    .legend-footer { padding: 6px 8px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; font-size: 9px; background: #f9fafb; border-radius: 0 0 8px 8px; }
-    .legend-footer button { padding: 3px 8px; font-size: 9px; border: none; border-radius: 3px; cursor: pointer; }
-    .btn-show { background: #2563eb; color: #fff; }
-    .btn-hide { background: #6b7280; color: #fff; }
-    .grp-btns button { padding: 1px 4px; font-size: 8px; border: none; border-radius: 2px; cursor: pointer; margin-left: 2px; }
-    .btn-all { background: #10b981; color: #fff; }
-    .btn-none { background: #ef4444; color: #fff; }
-    .opt-box { min-width: 14px; height: 14px; background: #f3f4f6; border: 1px solid #999; border-radius: 2px; font-size: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #333; flex-shrink: 0; }
-    .priority-legend { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 6px; background: #f9fafb; border-radius: 4px; margin-top: 4px; }
-    .priority-item { display: flex; align-items: center; gap: 3px; font-size: 9px; }
-    .priority-legend-vertical { display: flex; flex-direction: column; gap: 4px; padding: 6px; background: #f9fafb; border-radius: 4px; margin-top: 4px; }
-    .priority-item-v { display: flex; align-items: center; gap: 6px; font-size: 9px; }
+    .layer-item { display: flex; align-items: center; gap: 6px; padding: 3px 2px; font-size: 10px; border-radius: 3px; }
+    .layer-item:hover { background: #f9fafb; }
+    .layer-item input[type=checkbox] { width:13px; height:13px; accent-color:#2563eb; cursor:pointer; flex-shrink:0; }
+    .layer-item label { flex:1; cursor:pointer; color:#374151; line-height:1.3; }
+    .sym-pt { width:11px; height:11px; border-radius:50%; border:1.5px solid #555; flex-shrink:0; }
+    .sym-ln { width:18px; height:3px; border-radius:1px; flex-shrink:0; }
+    .sym-pg { width:11px; height:11px; border:1.5px solid #555; flex-shrink:0; }
+    .sym-rs { width:11px; height:11px; border-radius:2px; border:1px solid #ccc; flex-shrink:0; }
+    .grp-btns { display:flex; gap:3px; }
+    .grp-btns button { padding:1px 5px; font-size:8px; font-weight:700; border:none; border-radius:3px; cursor:pointer; color:#fff; }
+    .btn-all  { background:#10b981; }
+    .btn-none { background:#ef4444; }
+    .legend-footer { padding:6px 8px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; font-size:9px; color:#6b7280; background:#f9fafb; border-radius:0 0 8px 8px; }
+    .legend-footer button { padding:3px 9px; font-size:9px; font-weight:600; border:none; border-radius:3px; cursor:pointer; color:#fff; }
+    .btn-show { background:#2563eb; }
+    .btn-hide { background:#6b7280; }
+    .badge-up { background:#b10a39; color:#fff; font-size:7px; font-weight:700; padding:1px 4px; border-radius:2px; white-space:nowrap; flex-shrink:0; }
+    .badge-dn { background:#265eb1; color:#fff; font-size:7px; font-weight:700; padding:1px 4px; border-radius:2px; white-space:nowrap; flex-shrink:0; }
+    .pair-row { display:flex; gap:4px; margin:1px 0; }
+    .pair-row .layer-item { flex:1; }
+    .sub-title { font-size:9px; font-weight:700; color:#374151; padding:3px 0 1px 0; }
+    .color-key { display:flex; flex-wrap:wrap; gap:6px; padding:4px; background:#f9fafb; border-radius:4px; margin-top:3px; }
+    .color-key-item { display:flex; align-items:center; gap:3px; font-size:9px; color:#374151; }
+    .color-key-v { display:flex; flex-direction:column; gap:3px; padding:5px 4px; background:#f9fafb; border-radius:4px; margin-top:3px; }
+    .color-key-v-item { display:flex; align-items:center; gap:5px; font-size:9px; color:#374151; }
+    .intv-item { padding:3px 0; border-bottom:1px dashed #e5e7eb; }
+    .intv-item:last-of-type { border-bottom:none; }
+    .basemap-item { display:flex; align-items:center; gap:6px; padding:3px 2px; font-size:10px; border-radius:3px; }
+    .basemap-item:hover { background:#f9fafb; }
+    .basemap-item input[type=radio] { width:13px; height:13px; accent-color:#2563eb; cursor:pointer; flex-shrink:0; }
+    .basemap-item label { flex:1; cursor:pointer; color:#374151; line-height:1.3; }
     </style>
-    <title>Identification of Priority Area and Option forSustainable Landscape Management (SLM) In Knuckles Mountain Region Sri Lanka 
-</title>
+    <title>Identification of Priority Area and Option for Sustainable Landscape Management (SLM) In Knuckles Mountain Region Sri Lanka</title>
 </head>
 <body>
 <div id="map"></div>
 <script src="js/leaflet.js"></script>
-<script src="js/L.Control.Layers.Tree.min.js"></script>
 <script src="js/leaflet-hash.js"></script>
 <script src="js/Autolinker.min.js"></script>
 <script src="js/rbush.min.js"></script>
 <script src="js/labelgun.min.js"></script>
 <script src="js/labels.js"></script>
 <script src="js/leaflet-measure.js"></script>
-<script src="data/UpstreamDownstreamBoundary_9.js"></script>
-<script src="data/GramaNiladhariDivisionBoundary_10.js"></script>
-<script src="data/DivisionalSecretariatDivisionBoundary_11.js"></script>
-<script src="data/DistrictBoundary_12.js"></script>
-<script src="data/ProvienceBoundary_13.js"></script>
-<script src="data/ProjectBoundary_14.js"></script>
-<script src="data/Activity121IncreasingcroppingintensityofirrigatedricePolygon_15.js"></script>
-<script src="data/Activity113RestorationofforestmosaiclandscapesPolygon_16.js"></script>
-<script src="data/Activity113RestorationofforestmosaiclandscapesPolyline_17.js"></script>
-<script src="data/Activity123Restorationandintensificationofsustainableplantations_18.js"></script>
-<script src="data/Activity122Intensificationofsustainablesmallholderproduction_19.js"></script>
-<script src="data/Activity121IncreasingcroppingintensityofirrigatedricePolyline_20.js"></script>
-<script src="data/Activity113RestorationofforestmosaiclandscapesPoint_21.js"></script>
-<script src="data/Activity112Rehabilitationandestablishmentofvillagetankspondsandirrigationnetworks_22.js"></script>
-<script src="data/Activity111StreamsideProtectionanddrainagemanagementalongsroads_23.js"></script>
-
+<script src="data/UpstreamDownstreamBoundary_19.js"></script>
+<script src="data/GramaNiladhariDivisionBoundary_20.js"></script>
+<script src="data/DivisionalSecretariatDivisionBoundary_21.js"></script>
+<script src="data/DistrictBoundary_22.js"></script>
+<script src="data/ProvienceBoundary_23.js"></script>
+<script src="data/ProjectBoundary_24.js"></script>
+<script src="data/Activity121IncreasingcroppingintensityofirrigatedricePolygon_25.js"></script>
+<script src="data/Activity113RestorationofforestmosaiclandscapesPolygon_26.js"></script>
+<script src="data/Activity113RestorationofforestmosaiclandscapesPolyline_27.js"></script>
+<script src="data/Activity123Restorationandintensificationofsustainableplantations_28.js"></script>
+<script src="data/Activity122Intensificationofsustainablesmallholderproduction_29.js"></script>
+<script src="data/Activity121IncreasingcroppingintensityofirrigatedricePolyline_30.js"></script>
+<script src="data/Activity113RestorationofforestmosaiclandscapesPoint_31.js"></script>
+<script src="data/Activity112Rehabilitationandestablishmentofvillagetankspondsandirrigationnetworks_32.js"></script>
+<script src="data/Activity111StreamsideProtectionanddrainagemanagementalongsroads_33.js"></script>
 <script>
-// === MAP INIT ===
-var map = L.map('map', {zoomControl:false, maxZoom:28, minZoom:1}).fitBounds([[7.22,80.21],[8.09,81.61]]);
+// ===== MAP =====
+var map = L.map('map', {zoomControl:false, maxZoom:28, minZoom:1})
+           .fitBounds([[7.22,80.21],[8.09,81.61]]);
 L.control.zoom({position:'topleft'}).addTo(map);
 new L.Hash(map);
+var measureControl = new L.Control.Measure({
+    position:'topleft',
+    primaryLengthUnit:'meters', secondaryLengthUnit:'kilometers',
+    primaryAreaUnit:'sqmeters', secondaryAreaUnit:'hectares'
+});
+measureControl.addTo(map);
+document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML='';
+document.getElementsByClassName('leaflet-control-measure-toggle')[0].className+=' fas fa-ruler';
 
-// === HIGHLIGHT ===
-function hl(e) {
-    var l = e.target;
-    var g = l.feature.geometry.type;
-    if (g.includes('Line')) l.setStyle({color:'#ffff00'});
+// ===== HIGHLIGHT =====
+function highlightFeature(e) {
+    var l=e.target, g=l.feature.geometry.type;
+    if(g.includes('Line')) l.setStyle({color:'#ffff00'});
     else l.setStyle({fillColor:'#ffff00',fillOpacity:1});
     l.openPopup();
 }
-function bindP(f,l,props) {
-    l.on({mouseout:function(e){for(var i in e.target._eventParents){if(typeof e.target._eventParents[i].resetStyle==='function')e.target._eventParents[i].resetStyle(e.target);}l.closePopup();},mouseover:hl});
+function resetHighlight(e) {
+    for(var i in e.target._eventParents)
+        if(typeof e.target._eventParents[i].resetStyle==='function')
+            e.target._eventParents[i].resetStyle(e.target);
+    e.target.closePopup();
+}
+function onEach(f,l,fields) {
+    l.on({mouseover:highlightFeature, mouseout:resetHighlight});
     var h='<table>';
-    props.forEach(function(p){if(f.properties[p.k])h+='<tr><td><b>'+p.n+':</b> '+f.properties[p.k]+'</td></tr>';});
+    fields.forEach(function(fd){
+        var v=f.properties[fd.k];
+        if(v!==null&&v!==undefined&&v!=='') h+='<tr><th>'+fd.n+'</th><td>'+v+'</td></tr>';
+    });
     l.bindPopup(h+'</table>',{maxHeight:400});
 }
 
-// === LAYERS ===
-var layers = {};
-var rb = [[7.19,79.83],[8.44,81.06]];
+// ===== LAYERS =====
+var lyr={};
+var basemapKeys=['osm','satellite','satellite_labels','topo','grey'];
 
-// Base
-layers.osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19});
-map.addLayer(layers.osm);
+// Basemaps
+lyr.osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'});
+lyr.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles &copy; Esri'});
+lyr.satellite_labels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Labels &copy; Esri'});
+lyr.topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'Map data &copy; OpenStreetMap | &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'});
+lyr.grey = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'});
+map.addLayer(lyr.osm);
 
-// Rasters - Priorities of Intervention
-layers.loc = L.imageOverlay('data/LocationbasedPriorityInterventionOption_1.png',rb);
-layers.plant = L.imageOverlay('data/Restorationandsustainableintensificationofplantations_2.png',rb);
-layers.small = L.imageOverlay('data/Sustainableintensificationofsmallholderproduction_3.png',rb);
-layers.rice = L.imageOverlay('data/Increasingcroppingintensityofirrigatedriceinbothupstreamanddownstreamareas_4.png',rb);
-layers.forest = L.imageOverlay('data/Restorationofforestmosaiclandscapes_5.png',rb);
-layers.tanks = L.imageOverlay('data/Rehabilitationandestablishmentofvillagetankspondsandirrigationnetworks_6.png',rb);
-layers.drain = L.imageOverlay('data/Drainagemanagementalongroads_7.png',rb);
-layers.stream = L.imageOverlay('data/Streamsideprotection_8.png',rb);
+// Rasters
+lyr.loc_dn    = L.imageOverlay('data/location_downstream_1.png',                                                                       [[7.472215662371626,79.83172493181046],[8.440889154806131,81.05907162052064]]);
+lyr.loc_up    = L.imageOverlay('data/location_upsteam_2.png',                                                                          [[7.190745519142062,80.55979097218261],[7.879095148236164,81.0644802473354]]);
+lyr.stream_a  = L.imageOverlay('data/streamsideprotection_10.png',                                                                     [[7.472215662371626,79.83172465781156],[8.441001965819027,81.05914316178692]]);
+lyr.drain_a   = L.imageOverlay('data/Drainagemanagementalongroads_9.png',                                                              [[7.471971760643342,79.83172443102877],[8.440916509299853,81.05907120605528]]);
+lyr.tanks_a   = L.imageOverlay('data/Rehabilitationandestablishmentofvillagetankspondsandirrigationnetworks_8.png',                   [[7.472215662371626,79.83172465781156],[8.441001965819027,81.05914316178692]]);
+lyr.forest_a  = L.imageOverlay('data/Restorationofforestmosaiclandscapes_7.png',                                                      [[7.472215662371626,79.83172465781156],[8.441001965819027,81.05914316178692]]);
+lyr.rice_a    = L.imageOverlay('data/Increasingcroppingintensityofirrigatedriceinbothupstreamanddownstreamareas_6.png',               [[7.472215662371626,79.83172465781156],[8.441001965819027,81.05914316178692]]);
+lyr.small6a_a = L.imageOverlay('data/6ASustainableintensificationofsmallholderproduction_5.png',                                      [[7.471971760643342,79.83172443102877],[8.440916509299853,81.05907120605528]]);
+lyr.small6b_a = L.imageOverlay('data/6BSustainableintensificationofsmallholderproduction_4.png',                                      [[7.471971760643342,79.83172443102877],[8.440916509299853,81.05907120605528]]);
+lyr.plant_a   = L.imageOverlay('data/Restorationandsustainableintensificationofplantations_3.png',                                    [[7.472215662371626,79.83172465781156],[8.441001965819027,81.05914316178692]]);
+lyr.stream_b  = L.imageOverlay('data/streamsideprotection_18.png',                                                                    [[7.19074545175455,80.559790947813],[7.879142101696742,81.06458782454193]]);
+lyr.drain_b   = L.imageOverlay('data/Drainagemanagementalongroads_17.png',                                                            [[7.190744596474597,80.55970006940598],[7.879365454841279,81.06438967244858]]);
+lyr.tanks_b   = L.imageOverlay('data/Rehabilitationandestablishmentofvillagetankspondsandirrigationnetworks_16.png',                  [[7.19074545175455,80.559790947813],[7.879142101696742,81.06458782454193]]);
+lyr.forest_b  = L.imageOverlay('data/Restorationofforestmosaiclandscapes_15.png',                                                     [[7.190745465189268,80.55979096298381],[7.879112871417416,81.06456636685583]]);
+lyr.rice_b    = L.imageOverlay('data/Increasingcroppingintensityofirrigatedriceinbothupstreamanddownstreamareas_14.png',              [[7.190745465189268,80.55979096298381],[7.879112871417416,81.06456636685583]]);
+lyr.small6a_b = L.imageOverlay('data/6ASustainableintensificationofsmallholderproduction_13.png',                                     [[7.190744596474597,80.55970006940598],[7.879365454841279,81.06438967244858]]);
+lyr.small6b_b = L.imageOverlay('data/6BSustainableintensificationofsmallholderproduction_12.png',                                     [[7.190744596474597,80.55970006940598],[7.879365454841279,81.06438967244858]]);
+lyr.plant_b   = L.imageOverlay('data/Restorationandsustainableintensificationofplantations_11.png',                                   [[7.190745465189268,80.55979096298381],[7.879112871417416,81.06456636685583]]);
 
 // Boundaries
-layers.updown = L.geoJson(json_UpstreamDownstreamBoundary_9,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'Name',n:'Name'},{k:'Updo',n:'Type'}]);},
-    style:function(f){return{color:f.properties.Updo==='Upstream'?'#b10a39':'#265eb1',weight:4,fillOpacity:0};}
+lyr.updown = L.geoJson(json_UpstreamDownstreamBoundary_19,{
+    onEachFeature:function(f,l){onEach(f,l,[{k:'Name',n:'Name'},{k:'Updo',n:'Type'}]);},
+    style:function(f){return{color:f.properties.Updo==='Upstream'?'rgba(177,10,57,1)':'rgba(38,94,177,1)',weight:4,fillOpacity:0};}
 });
-layers.gnd = L.geoJson(json_GramaNiladhariDivisionBoundary_10,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'GND_N',n:'GND'}]);},
-    style:function(){return{color:'#110202',weight:2,fillOpacity:0};}
+lyr.gnd = L.geoJson(json_GramaNiladhariDivisionBoundary_20,{
+    onEachFeature:function(f,l){onEach(f,l,[{k:'GND_N',n:'GND'}]);},
+    style:function(){return{color:'rgba(17,2,2,1)',weight:4,fillOpacity:0};}
 });
-layers.dsd = L.geoJson(json_DivisionalSecretariatDivisionBoundary_11,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'DSD_N',n:'DSD'}]);},
-    style:function(){return{color:'#555',weight:3,fillOpacity:0};}
+lyr.dsd = L.geoJson(json_DivisionalSecretariatDivisionBoundary_21,{
+    onEachFeature:function(f,l){onEach(f,l,[{k:'DSD_N',n:'DSD'}]);},
+    style:function(){return{color:'rgba(10,1,1,1)',weight:4,fillOpacity:0};}
 });
-layers.dist = L.geoJson(json_DistrictBoundary_12,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'DISTRICT_N',n:'District'}]);},
-    style:function(){return{color:'#333',weight:4,fillOpacity:0};}
+lyr.dist = L.geoJson(json_DistrictBoundary_22,{
+    onEachFeature:function(f,l){onEach(f,l,[{k:'DISTRICT_N',n:'District'}]);},
+    style:function(){return{color:'rgba(12,1,2,1)',weight:4,fillOpacity:0};}
 });
-layers.prov = L.geoJson(json_ProvienceBoundary_13,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'PROVINCE_N',n:'Province'}]);},
-    style:function(){return{color:'#111',weight:5,fillOpacity:0};}
+lyr.prov = L.geoJson(json_ProvienceBoundary_23,{
+    onEachFeature:function(f,l){onEach(f,l,[{k:'PROVINCE_N',n:'Province'}]);},
+    style:function(){return{color:'rgba(2,5,2,1)',weight:4,fillOpacity:0};}
 });
-layers.proj = L.geoJson(json_ProjectBoundary_14,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'SIDT_1',n:'Project'}]);},
-    style:function(){return{color:'#e41a1c',weight:4,fillOpacity:0};}
-});
-
-// Activities of PMU - DENGAN WARNA BARU
-layers.a111 = L.geoJson(json_Activity111StreamsideProtectionanddrainagemanagementalongsroads_23,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'Name',n:'Name'}]);},
-    pointToLayer:function(f,ll){return L.circleMarker(ll,{radius:5,fillColor:'#6B7F1E',color:'#333',weight:1,fillOpacity:1});}
-});
-layers.a112 = L.geoJson(json_Activity112Rehabilitationandestablishmentofvillagetankspondsandirrigationnetworks_22,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'Name_of_th',n:'Name'}]);},
-    pointToLayer:function(f,ll){return L.circleMarker(ll,{radius:5,fillColor:'#00BCD4',color:'#333',weight:1,fillOpacity:1});}
-});
-layers.a113pt = L.geoJson(json_Activity113RestorationofforestmosaiclandscapesPoint_21,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'Name',n:'Name'}]);},
-    pointToLayer:function(f,ll){return L.circleMarker(ll,{radius:5,fillColor:'#8BC34A',color:'#333',weight:1,fillOpacity:1});}
-});
-layers.a121pt = L.geoJson(json_Activity121IncreasingcroppingintensityofirrigatedricePolyline_20,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'Name',n:'Name'}]);},
-    pointToLayer:function(f,ll){return L.circleMarker(ll,{radius:5,fillColor:'#7B1FA2',color:'#333',weight:1,fillOpacity:1});}
-});
-layers.a122 = L.geoJson(json_Activity122Intensificationofsustainablesmallholderproduction_19,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'Name',n:'Name'}]);},
-    pointToLayer:function(f,ll){return L.circleMarker(ll,{radius:5,fillColor:'#03A9F4',color:'#333',weight:1,fillOpacity:1});}
-});
-layers.a123 = L.geoJson(json_Activity123Restorationandintensificationofsustainableplantations_18,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'Name',n:'Name'},{k:'Division_N',n:'Division'}]);},
-    pointToLayer:function(f,ll){return L.circleMarker(ll,{radius:5,fillColor:'#F8BBD0',color:'#333',weight:1,fillOpacity:1});}
-});
-layers.a113l = L.geoJson(json_Activity113RestorationofforestmosaiclandscapesPolyline_17,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'Name',n:'Name'}]);},
-    style:function(){return{color:'#8BC34A',weight:2};}
-});
-layers.a113p = L.geoJson(json_Activity113RestorationofforestmosaiclandscapesPolygon_16,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'Name',n:'Name'}]);},
-    style:function(){return{color:'#333',weight:1,fillColor:'#8BC34A',fillOpacity:1};}
-});
-layers.a121p = L.geoJson(json_Activity121IncreasingcroppingintensityofirrigatedricePolygon_15,{
-    onEachFeature:function(f,l){bindP(f,l,[{k:'Name',n:'Name'}]);},
-    style:function(){return{color:'#333',weight:1,fillColor:'#7B1FA2',fillOpacity:1};}
+lyr.proj = L.geoJson(json_ProjectBoundary_24,{
+    onEachFeature:function(f,l){onEach(f,l,[{k:'SIDT_1',n:'Project'}]);},
+    style:function(){return{color:'rgba(228,26,28,1)',weight:4,fillOpacity:0};}
 });
 
-// Add all layers
-Object.keys(layers).forEach(function(k){map.addLayer(layers[k]);});
+// Activities
+lyr.a111   = L.geoJson(json_Activity111StreamsideProtectionanddrainagemanagementalongsroads_33,{onEachFeature:function(f,l){onEach(f,l,[{k:'Name',n:'Name'}]);},pointToLayer:function(f,ll){return L.circleMarker(ll,{radius:4,fillColor:'rgba(40,47,183,1)',color:'#333',weight:1,fillOpacity:1});}});
+lyr.a112   = L.geoJson(json_Activity112Rehabilitationandestablishmentofvillagetankspondsandirrigationnetworks_32,{onEachFeature:function(f,l){onEach(f,l,[{k:'Name_of_th',n:'Name'}]);},pointToLayer:function(f,ll){return L.circleMarker(ll,{radius:4,fillColor:'rgba(141,220,153,1)',color:'#333',weight:1,fillOpacity:1});}});
+lyr.a113pt = L.geoJson(json_Activity113RestorationofforestmosaiclandscapesPoint_31,{onEachFeature:function(f,l){onEach(f,l,[{k:'Name',n:'Name'}]);},pointToLayer:function(f,ll){return L.circleMarker(ll,{radius:4,fillColor:'rgba(16,126,22,1)',color:'#333',weight:1,fillOpacity:1});}});
+lyr.a121pt = L.geoJson(json_Activity121IncreasingcroppingintensityofirrigatedricePolyline_30,{onEachFeature:function(f,l){onEach(f,l,[{k:'Name',n:'Name'}]);},pointToLayer:function(f,ll){return L.circleMarker(ll,{radius:4,fillColor:'rgba(232,251,56,1)',color:'#333',weight:1,fillOpacity:1});}});
+lyr.a122   = L.geoJson(json_Activity122Intensificationofsustainablesmallholderproduction_29,{onEachFeature:function(f,l){onEach(f,l,[{k:'Name',n:'Name'}]);},pointToLayer:function(f,ll){return L.circleMarker(ll,{radius:4,fillColor:'rgba(239,36,153,1)',color:'#333',weight:1,fillOpacity:1});}});
+lyr.a123   = L.geoJson(json_Activity123Restorationandintensificationofsustainableplantations_28,{onEachFeature:function(f,l){onEach(f,l,[{k:'Name',n:'Name'},{k:'Division_N',n:'Division'}]);},pointToLayer:function(f,ll){return L.circleMarker(ll,{radius:4,fillColor:'rgba(213,28,61,1)',color:'#333',weight:1,fillOpacity:1});}});
+lyr.a113l  = L.geoJson(json_Activity113RestorationofforestmosaiclandscapesPolyline_27,{onEachFeature:function(f,l){onEach(f,l,[{k:'Name',n:'Name'}]);},style:function(){return{color:'rgba(196,60,57,1)',weight:1,fillOpacity:0};}});
+lyr.a113p  = L.geoJson(json_Activity113RestorationofforestmosaiclandscapesPolygon_26,{onEachFeature:function(f,l){onEach(f,l,[{k:'Name',n:'Name'}]);},style:function(){return{color:'rgba(35,35,35,1)',weight:1,fillColor:'rgba(11,255,44,1)',fillOpacity:1};}});
+lyr.a121p  = L.geoJson(json_Activity121IncreasingcroppingintensityofirrigatedricePolygon_25,{onEachFeature:function(f,l){onEach(f,l,[{k:'Name',n:'Name'}]);},style:function(){return{color:'rgba(35,35,35,1)',weight:1,fillColor:'rgba(207,204,27,1)',fillOpacity:1};}});
 
-// === LEGEND CONTROL ===
-var Legend = L.Control.extend({
-    options:{position:'topright'},
-    onAdd:function(){
+// Overlay keys (no basemaps)
+var overlayKeys = Object.keys(lyr).filter(function(k){return basemapKeys.indexOf(k)===-1;});
+overlayKeys.forEach(function(k){map.addLayer(lyr[k]);});
+
+// Group definitions
+var grpLayers = {
+    act:      ['a111','a112','a113pt','a121pt','a122','a123','a113l','a113p','a121p'],
+    bnd:      ['updown','gnd','dsd','dist','prov','proj'],
+    priority: ['stream_a','stream_b','drain_a','drain_b','tanks_a','tanks_b',
+               'forest_a','forest_b','rice_a','rice_b',
+               'small6a_a','small6a_b','small6b_a','small6b_b','plant_a','plant_b'],
+    loc:      ['loc_dn','loc_up']
+};
+
+// ===================================================================
+// LEGEND CONTROL
+// ROOT CAUSE FIX:
+//   disableClickPropagation() intercepts ALL clicks at the container
+//   level via useCapture=true, which prevents checkbox/button clicks
+//   from ever reaching their targets.
+//   Solution: only block mousedown/dblclick/wheel (pan & zoom triggers),
+//   and attach all interactive listeners via addEventListener() after
+//   innerHTML is set — never rely on inline onchange/onclick.
+// ===================================================================
+var legendContainer = null;
+
+var LegendControl = L.Control.extend({
+    options: {position:'topright'},
+    onAdd: function() {
         var c = L.DomUtil.create('div','legend-control');
-        L.DomEvent.disableClickPropagation(c);
-        L.DomEvent.disableScrollPropagation(c);
-        c.innerHTML = `
-<div class="legend-header">🗺️ Map Legend</div>
-<div class="legend-content">
 
-<!-- Activities of PMU -->
-<div class="legend-group"><div class="group-header" onclick="tg('act')"><span>▼ Activities of PMU</span><div class="grp-btns"><button class="btn-all" onclick="event.stopPropagation();ta('act',1)">All</button><button class="btn-none" onclick="event.stopPropagation();ta('act',0)">None</button></div></div>
-<div class="group-items" id="g-act">
-<div class="layer-item"><input type="checkbox" id="c_a111" checked onchange="tl('a111')"><div class="sym-pt" style="background:#6B7F1E"></div><label for="c_a111">Activity 1.1.1 Streamside Protection and drainage management alongs roads</label></div>
-<div class="layer-item"><input type="checkbox" id="c_a112" checked onchange="tl('a112')"><div class="sym-pt" style="background:#00BCD4"></div><label for="c_a112">Activity 1.1.2 Rehabilitation and establishment of village tanks, ponds and irrigation networks</label></div>
-<div class="layer-item"><input type="checkbox" id="c_a113pt" checked onchange="tl('a113pt')"><div class="sym-pt" style="background:#8BC34A"></div><label for="c_a113pt">Activity 1.1.3 Restoration of forest mosaic landscapes - Point</label></div>
-<div class="layer-item"><input type="checkbox" id="c_a121pt" checked onchange="tl('a121pt')"><div class="sym-pt" style="background:#7B1FA2"></div><label for="c_a121pt">Activity 1.2.1 Increasing cropping intensity of irrigated rice - Polyline</label></div>
-<div class="layer-item"><input type="checkbox" id="c_a122" checked onchange="tl('a122')"><div class="sym-pt" style="background:#03A9F4"></div><label for="c_a122">Activity 1.2.2 Intensification of sustainable smallholder production</label></div>
-<div class="layer-item"><input type="checkbox" id="c_a123" checked onchange="tl('a123')"><div class="sym-pt" style="background:#F8BBD0"></div><label for="c_a123">Activity 1.2.3 Restoration and intensification of sustainable plantations</label></div>
-<div class="layer-item"><input type="checkbox" id="c_a113l" checked onchange="tl('a113l')"><div class="sym-ln" style="background:#8BC34A"></div><label for="c_a113l">Activity 1.1.3 Restoration of forest mosaic landscapes - Polyline</label></div>
-<div class="layer-item"><input type="checkbox" id="c_a113p" checked onchange="tl('a113p')"><div class="sym-pg" style="background:#8BC34A"></div><label for="c_a113p">Activity 1.1.3 Restoration of forest mosaic landscapes - Polygon</label></div>
-<div class="layer-item"><input type="checkbox" id="c_a121p" checked onchange="tl('a121p')"><div class="sym-pg" style="background:#7B1FA2"></div><label for="c_a121p">Activity 1.2.1 Increasing cropping intensity of irrigated rice - Polygon</label></div>
-</div></div>
+        // Block only events that would move/zoom the map
+        // Do NOT call disableClickPropagation — it kills checkbox/button clicks
+        ['mousedown','dblclick','wheel','touchstart'].forEach(function(ev){
+            L.DomEvent.on(c, ev, L.DomEvent.stopPropagation);
+        });
 
-<!-- Boundaries -->
-<div class="legend-group"><div class="group-header" onclick="tg('bnd')"><span>▼ Boundaries</span><div class="grp-btns"><button class="btn-all" onclick="event.stopPropagation();ta('bnd',1)">All</button><button class="btn-none" onclick="event.stopPropagation();ta('bnd',0)">None</button></div></div>
-<div class="group-items" id="g-bnd">
-<div class="layer-item"><input type="checkbox" id="c_updown" checked onchange="tl('updown')"><div class="sym-ln" style="background:linear-gradient(90deg,#b10a39,#265eb1)"></div><label for="c_updown">Upstream/Downstream Boundary</label></div>
-<div class="layer-item"><input type="checkbox" id="c_gnd" checked onchange="tl('gnd')"><div class="sym-ln" style="background:#110202"></div><label for="c_gnd">Grama Niladhari Division Boundary</label></div>
-<div class="layer-item"><input type="checkbox" id="c_dsd" checked onchange="tl('dsd')"><div class="sym-ln" style="background:#555"></div><label for="c_dsd">Divisional Secretariat Division Boundary</label></div>
-<div class="layer-item"><input type="checkbox" id="c_dist" checked onchange="tl('dist')"><div class="sym-ln" style="background:#333"></div><label for="c_dist">District Boundary</label></div>
-<div class="layer-item"><input type="checkbox" id="c_prov" checked onchange="tl('prov')"><div class="sym-ln" style="background:#111"></div><label for="c_prov">Province Boundary</label></div>
-<div class="layer-item"><input type="checkbox" id="c_proj" checked onchange="tl('proj')"><div class="sym-ln" style="background:#e41a1c"></div><label for="c_proj">Project Boundary</label></div>
-</div></div>
-
-<!-- Priorities of Intervention -->
-<div class="legend-group"><div class="group-header" onclick="tg('priority')"><span>▼ Priorities of Intervention</span><div class="grp-btns"><button class="btn-all" onclick="event.stopPropagation();ta('priority',1)">All</button><button class="btn-none" onclick="event.stopPropagation();ta('priority',0)">None</button></div></div>
-<div class="group-items" id="g-priority">
-<div class="layer-item"><input type="checkbox" id="c_stream" checked onchange="tl('stream')"><div class="opt-box">1</div><label for="c_stream">Streamside protection</label></div>
-<div class="layer-item"><input type="checkbox" id="c_drain" checked onchange="tl('drain')"><div class="opt-box">2</div><label for="c_drain">Drainage management along roads</label></div>
-<div class="layer-item"><input type="checkbox" id="c_tanks" checked onchange="tl('tanks')"><div class="opt-box">3</div><label for="c_tanks">Rehabilitation and establishment of village tanks, ponds and irrigation networks</label></div>
-<div class="layer-item"><input type="checkbox" id="c_forest" checked onchange="tl('forest')"><div class="opt-box">4</div><label for="c_forest">Restoration of forest mosaic landscapes</label></div>
-<div class="layer-item"><input type="checkbox" id="c_rice" checked onchange="tl('rice')"><div class="opt-box">5</div><label for="c_rice">Increasing cropping intensity of irrigated rice in both upstream and downstream areas</label></div>
-<div class="layer-item"><input type="checkbox" id="c_small" checked onchange="tl('small')"><div class="opt-box">6</div><label for="c_small">Sustainable intensification of smallholder production</label></div>
-<div class="layer-item"><input type="checkbox" id="c_plant" checked onchange="tl('plant')"><div class="opt-box">7</div><label for="c_plant">Restoration and sustainable intensification of plantations</label></div>
-<div class="priority-legend">
-    <div class="priority-item"><div class="sym-rs" style="background:#FF0000; width:12px; height:12px;"></div><span>High Priority</span></div>
-    <div class="priority-item"><div class="sym-rs" style="background:#FFFF00; width:12px; height:12px;"></div><span>Medium Priority</span></div>
-    <div class="priority-item"><div class="sym-rs" style="background:#90EE90; width:12px; height:12px;"></div><span>Low Priority</span></div>
-    <div class="priority-item"><div class="sym-rs" style="background:#006400; width:12px; height:12px;"></div><span>No Priority</span></div>
-</div>
-</div></div>
-
-<!-- Location Based Priority -->
-<div class="legend-group"><div class="group-header" onclick="tg('loc')"><span>▼ Location Based Priority</span></div>
-<div class="group-items" id="g-loc">
-<div class="layer-item"><input type="checkbox" id="c_loc" checked onchange="tl('loc')"><div class="sym-rs" style="background:#888"></div><label for="c_loc">Location based Priority Intervention Option</label></div>
-<div class="priority-legend-vertical">
-    <div class="priority-item-v"><div class="sym-rs" style="background:#c0ab0e; width:12px; height:12px;"></div><span>Streamside protection</span></div>
-    <div class="priority-item-v"><div class="sym-rs" style="background:#fce375; width:12px; height:12px;"></div><span>Drainage management along roads</span></div>
-    <div class="priority-item-v"><div class="sym-rs" style="background:#21abb2; width:12px; height:12px;"></div><span>Rehabilitation and establishment of village tanks, ponds and irrigation networks</span></div>
-    <div class="priority-item-v"><div class="sym-rs" style="background:#73f6bb; width:12px; height:12px;"></div><span>Restoration of forest mosaic landscapes</span></div>
-    <div class="priority-item-v"><div class="sym-rs" style="background:#9b3196; width:12px; height:12px;"></div><span>Increasing cropping intensity of irrigated rice in both upstream and downstream areas</span></div>
-    <div class="priority-item-v"><div class="sym-rs" style="background:#e449dc; width:12px; height:12px;"></div><span>Sustainable intensification of smallholder production</span></div>
-    <div class="priority-item-v"><div class="sym-rs" style="background:#ff93d7; width:12px; height:12px;"></div><span>Restoration and sustainable intensification of plantations</span></div>
-</div>
-</div></div>
-
-<!-- Basemap -->
-<div class="legend-group"><div class="group-header" onclick="tg('base')"><span>▼ Basemap</span></div>
-<div class="group-items" id="g-base">
-<div class="layer-item"><input type="checkbox" id="c_osm" checked onchange="tl('osm')"><div class="sym-rs" style="background:linear-gradient(135deg,#aaa,#555)"></div><label for="c_osm">OpenStreetMap</label></div>
-</div></div>
-
-</div>
-<div class="legend-footer"><span id="cnt">24/24 layers</span><div><button class="btn-show" onclick="showAll()">Show All</button><button class="btn-hide" onclick="hideAll()">Hide All</button></div></div>`;
+        c.innerHTML = buildLegendHTML();
+        legendContainer = c;
+        attachLegendEvents(c);
         return c;
     }
 });
-map.addControl(new Legend());
 
-// === LEGEND FUNCTIONS ===
-var grpLayers = {
-    base:['osm'],
-    priority:['loc','plant','small','rice','forest','tanks','drain','stream'],
-    bnd:['updown','gnd','dsd','dist','prov','proj'],
-    act:['a111','a112','a113pt','a121pt','a122','a123','a113l','a113p','a121p']
-};
+function buildLegendHTML() {
+    var h = '<div class="legend-header">\uD83D\uDDFA\uFE0F Map Legend</div><div class="legend-content">';
 
-function tl(id) {
-    var chk = document.getElementById('c_'+id);
-    if(chk.checked) map.addLayer(layers[id]);
-    else map.removeLayer(layers[id]);
-    updCnt();
+    // Activities group
+    h += mkGroup('act','Activities of PMU',[
+        {id:'a111',   t:'pt', bg:'rgba(40,47,183,1)',   lbl:'Activity 1.1.1 Streamside Protection and drainage management along roads'},
+        {id:'a112',   t:'pt', bg:'rgba(141,220,153,1)', lbl:'Activity 1.1.2 Rehabilitation and establishment of village tanks, ponds and irrigation networks'},
+        {id:'a113pt', t:'pt', bg:'rgba(16,126,22,1)',   lbl:'Activity 1.1.3 Restoration of forest mosaic landscapes \u2013 Point'},
+        {id:'a121pt', t:'pt', bg:'rgba(232,251,56,1)',  lbl:'Activity 1.2.1 Increasing cropping intensity of irrigated rice \u2013 Polyline'},
+        {id:'a122',   t:'pt', bg:'rgba(239,36,153,1)',  lbl:'Activity 1.2.2 Intensification of sustainable smallholder production'},
+        {id:'a123',   t:'pt', bg:'rgba(213,28,61,1)',   lbl:'Activity 1.2.3 Restoration and intensification of sustainable plantations'},
+        {id:'a113l',  t:'ln', bg:'rgba(196,60,57,1)',   lbl:'Activity 1.1.3 Restoration of forest mosaic landscapes \u2013 Polyline'},
+        {id:'a113p',  t:'pg', bg:'rgba(11,255,44,1)',   lbl:'Activity 1.1.3 Restoration of forest mosaic landscapes \u2013 Polygon'},
+        {id:'a121p',  t:'pg', bg:'rgba(207,204,27,1)',  lbl:'Activity 1.2.1 Increasing cropping intensity of irrigated rice \u2013 Polygon'}
+    ]);
+
+    // Boundaries group
+    h += mkGroup('bnd','Boundaries',[
+        {id:'updown', t:'ln', bg:'linear-gradient(90deg,#b10a39 50%,#265eb1 50%)', lbl:'Upstream / Downstream Boundary'},
+        {id:'gnd',    t:'ln', bg:'rgba(17,2,2,1)',    lbl:'Grama Niladhari Division Boundary'},
+        {id:'dsd',    t:'ln', bg:'rgba(10,1,1,1)',    lbl:'Divisional Secretariat Division Boundary'},
+        {id:'dist',   t:'ln', bg:'rgba(12,1,2,1)',    lbl:'District Boundary'},
+        {id:'prov',   t:'ln', bg:'rgba(2,5,2,1)',     lbl:'Province Boundary'},
+        {id:'proj',   t:'ln', bg:'rgba(228,26,28,1)', lbl:'Project Boundary'}
+    ]);
+
+    // Priorities group
+    h += '<div class="legend-group"><div class="group-header" data-grp-toggle="priority"><span>\u25BC Priorities of Intervention</span>';
+    h += '<div class="grp-btns"><button class="btn-all" data-grp-all="priority">All</button><button class="btn-none" data-grp-none="priority">None</button></div></div>';
+    h += '<div class="group-items" id="g-priority">';
+    [
+        ['1 \u00B7 Streamside protection','stream'],
+        ['2 \u00B7 Drainage management along roads','drain'],
+        ['3 \u00B7 Rehabilitation and establishment of village tanks, ponds and irrigation networks','tanks'],
+        ['4 \u00B7 Restoration of forest mosaic landscapes','forest'],
+        ['5 \u00B7 Increasing cropping intensity of irrigated rice','rice'],
+        ['6A \u00B7 Sustainable intensification of smallholder production \u2013 Priority A','small6a'],
+        ['6B \u00B7 Sustainable intensification of smallholder production \u2013 Priority B','small6b'],
+        ['7 \u00B7 Restoration and sustainable intensification of plantations','plant']
+    ].forEach(function(p){
+        h += '<div class="intv-item"><div class="sub-title">'+p[0]+'</div><div class="pair-row">';
+        h += '<div class="layer-item"><input type="checkbox" id="c_'+p[1]+'_b" data-lyr="'+p[1]+'_b" checked><span class="badge-up">UP</span><label for="c_'+p[1]+'_b">Upstream</label></div>';
+        h += '<div class="layer-item"><input type="checkbox" id="c_'+p[1]+'_a" data-lyr="'+p[1]+'_a" checked><span class="badge-dn">DN</span><label for="c_'+p[1]+'_a">Downstream</label></div>';
+        h += '</div></div>';
+    });
+    h += '<div class="color-key">';
+    h += '<div class="color-key-item"><div class="sym-rs" style="background:#FF0000"></div><span>High Priority</span></div>';
+    h += '<div class="color-key-item"><div class="sym-rs" style="background:#FFFF00"></div><span>Medium Priority</span></div>';
+    h += '<div class="color-key-item"><div class="sym-rs" style="background:#90EE90"></div><span>Low Priority</span></div>';
+    h += '<div class="color-key-item"><div class="sym-rs" style="background:#006400"></div><span>No Priority</span></div>';
+    h += '</div></div></div>';
+
+    // Location group
+    h += '<div class="legend-group"><div class="group-header" data-grp-toggle="loc"><span>\u25BC Location Based Priority</span>';
+    h += '<div class="grp-btns"><button class="btn-all" data-grp-all="loc">All</button><button class="btn-none" data-grp-none="loc">None</button></div></div>';
+    h += '<div class="group-items" id="g-loc">';
+    h += '<div class="layer-item"><input type="checkbox" id="c_loc_dn" data-lyr="loc_dn" checked><span class="badge-dn">DN</span><label for="c_loc_dn">Location based Priority Intervention \u2013 Downstream</label></div>';
+    h += '<div class="layer-item"><input type="checkbox" id="c_loc_up" data-lyr="loc_up" checked><span class="badge-up">UP</span><label for="c_loc_up">Location based Priority Intervention \u2013 Upstream</label></div>';
+    h += '<div class="color-key-v">';
+    [
+        ['#F4F1DE', '1px solid #bbb', 'Streamside protection'],
+        ['#FBA41F', '1px solid #aaa', 'Drainage management along roads'],
+        ['#B0D5F2', '1px solid #aaa', 'Rehabilitation and establishment of village tanks, ponds'],
+        ['#47B44B', '1px solid #aaa', 'Restoration of forest mosaic landscapes'],
+        ['#008C79', '1px solid #aaa', 'Increasing cropping intensity of irrigated rice in both upstream and downstream areas'],
+        ['#FABBCE', '1px solid #aaa', 'Sustainable intensification of smallholder production Using Annual Crop'],
+        ['#C71458', '1px solid #aaa', 'Sustainable intensification of smallholder production Using Tree Crops/Agroforestry'],
+        ['#8A7063', '1px solid #aaa', 'Restoration and sustainable intensification of plantations']
+    ].forEach(function(c){ h += '<div class="color-key-v-item"><div class="sym-rs" style="background:'+c[0]+';border:'+c[1]+'"></div><span>'+c[2]+'</span></div>'; });
+    h += '</div></div></div>';
+
+    // Basemap group
+    h += '<div class="legend-group"><div class="group-header" data-grp-toggle="base"><span>\u25BC Basemap</span></div>';
+    h += '<div class="group-items" id="g-base">';
+    h += '<div class="basemap-item"><input type="radio" id="bm_osm" name="basemap" value="osm" checked><div class="sym-rs" style="background:linear-gradient(135deg,#aaf,#448)"></div><label for="bm_osm">OpenStreetMap</label></div>';
+    h += '<div class="basemap-item"><input type="radio" id="bm_sat" name="basemap" value="satellite"><div class="sym-rs" style="background:linear-gradient(135deg,#2d5a27,#5a8a52)"></div><label for="bm_sat">Satellite Imagery (Esri World)</label></div>';
+    h += '<div class="basemap-item"><input type="radio" id="bm_topo" name="basemap" value="topo"><div class="sym-rs" style="background:linear-gradient(135deg,#c8a96e,#8db88a)"></div><label for="bm_topo">Topographic Map</label></div>';
+    h += '<div class="basemap-item"><input type="radio" id="bm_grey" name="basemap" value="grey"><div class="sym-rs" style="background:linear-gradient(135deg,#e0e0e0,#9e9e9e)"></div><label for="bm_grey">Light Grey (CartoDB)</label></div>';
+    h += '</div></div>';
+
+    h += '</div>'; // end legend-content
+    h += '<div class="legend-footer"><span id="cnt">Loading...</span>';
+    h += '<div style="display:flex;gap:4px;"><button class="btn-show" id="btnShowAll">Show All</button><button class="btn-hide" id="btnHideAll">Hide All</button></div>';
+    h += '</div>';
+    return h;
 }
-function tg(g) {
-    var el = document.getElementById('g-'+g);
-    el.classList.toggle('hidden');
+
+function mkGroup(gid, title, items) {
+    var h = '<div class="legend-group"><div class="group-header" data-grp-toggle="'+gid+'"><span>\u25BC '+title+'</span>';
+    h += '<div class="grp-btns"><button class="btn-all" data-grp-all="'+gid+'">All</button><button class="btn-none" data-grp-none="'+gid+'">None</button></div></div>';
+    h += '<div class="group-items" id="g-'+gid+'">';
+    items.forEach(function(it){
+        h += '<div class="layer-item"><input type="checkbox" id="c_'+it.id+'" data-lyr="'+it.id+'" checked>';
+        h += '<div class="sym-'+it.t+'" style="background:'+it.bg+'"></div>';
+        h += '<label for="c_'+it.id+'">'+it.lbl+'</label></div>';
+    });
+    h += '</div></div>';
+    return h;
 }
-function ta(g,on) {
-    grpLayers[g].forEach(function(id){
+
+// =====================================================================
+// Attach ALL interactive events via addEventListener.
+// This is the ONLY reliable way to handle events inside Leaflet controls
+// when we need to also block map pan/zoom (which requires stopPropagation
+// on mousedown, which Leaflet's disableClickPropagation would over-block).
+// =====================================================================
+function attachLegendEvents(c) {
+
+    // Checkboxes: toggle overlay
+    c.querySelectorAll('input[type=checkbox][data-lyr]').forEach(function(el){
+        el.addEventListener('change', function(){
+            var id = el.getAttribute('data-lyr');
+            if(!lyr[id]) return;
+            if(el.checked) map.addLayer(lyr[id]);
+            else           map.removeLayer(lyr[id]);
+            updCnt();
+        });
+    });
+
+    // Radio: switch basemap
+    c.querySelectorAll('input[type=radio][name=basemap]').forEach(function(el){
+        el.addEventListener('change', function(){
+            if(!el.checked) return;
+            switchBasemap(el.value);
+        });
+    });
+
+    // Group headers: collapse/expand
+    c.querySelectorAll('[data-grp-toggle]').forEach(function(el){
+        el.addEventListener('click', function(e){
+            if(e.target.tagName==='BUTTON') return; // let buttons bubble
+            var gid = el.getAttribute('data-grp-toggle');
+            var box = document.getElementById('g-'+gid);
+            if(box) box.classList.toggle('hidden');
+        });
+    });
+
+    // All buttons
+    c.querySelectorAll('[data-grp-all]').forEach(function(el){
+        el.addEventListener('click', function(e){
+            e.stopPropagation();
+            setGroup(el.getAttribute('data-grp-all'), true);
+        });
+    });
+
+    // None buttons
+    c.querySelectorAll('[data-grp-none]').forEach(function(el){
+        el.addEventListener('click', function(e){
+            e.stopPropagation();
+            setGroup(el.getAttribute('data-grp-none'), false);
+        });
+    });
+
+    // Show All
+    c.querySelector('#btnShowAll').addEventListener('click', function(e){
+        e.stopPropagation();
+        bulkStart();
+        overlayKeys.forEach(function(id){
+            var chk = c.querySelector('#c_'+id);
+            if(chk) chk.checked = true;
+            if(lyr[id] && !map.hasLayer(lyr[id])) map.addLayer(lyr[id]);
+        });
+        bulkEnd();
+        updCnt();
+    });
+
+    // Hide All
+    c.querySelector('#btnHideAll').addEventListener('click', function(e){
+        e.stopPropagation();
+        bulkStart();
+        overlayKeys.forEach(function(id){
+            var chk = c.querySelector('#c_'+id);
+            if(chk) chk.checked = false;
+            if(lyr[id] && map.hasLayer(lyr[id])) map.removeLayer(lyr[id]);
+        });
+        bulkEnd();
+        updCnt();
+    });
+}
+
+// ---- bulk layer helpers: suspend label reset during batch ops ----
+var _bulkMode = false;
+function bulkStart() { _bulkMode = true; }
+function bulkEnd()   { _bulkMode = false; scheduleResetLabels(); }
+
+function setGroup(gid, on) {
+    var ids = grpLayers[gid];
+    if(!ids) return;
+    bulkStart();
+    ids.forEach(function(id){
         var chk = document.getElementById('c_'+id);
+        if(!chk || !lyr[id]) return;
         chk.checked = on;
-        if(on) map.addLayer(layers[id]);
-        else map.removeLayer(layers[id]);
+        if(on) { if(!map.hasLayer(lyr[id])) map.addLayer(lyr[id]); }
+        else   { if(map.hasLayer(lyr[id]))  map.removeLayer(lyr[id]); }
     });
+    bulkEnd();
     updCnt();
 }
-function showAll() {
-    Object.keys(layers).forEach(function(id){
-        document.getElementById('c_'+id).checked = true;
-        map.addLayer(layers[id]);
-    });
-    updCnt();
+
+function switchBasemap(name) {
+    bulkStart();
+    basemapKeys.forEach(function(b){ if(map.hasLayer(lyr[b])) map.removeLayer(lyr[b]); });
+    if(name==='satellite'){ map.addLayer(lyr.satellite); map.addLayer(lyr.satellite_labels); }
+    else if(name==='osm')  map.addLayer(lyr.osm);
+    else if(name==='topo') map.addLayer(lyr.topo);
+    else if(name==='grey') map.addLayer(lyr.grey);
+    bulkEnd();
 }
-function hideAll() {
-    Object.keys(layers).forEach(function(id){
-        document.getElementById('c_'+id).checked = false;
-        map.removeLayer(layers[id]);
-    });
-    updCnt();
-}
+
 function updCnt() {
-    var t = Object.keys(layers).length;
-    var v = 0;
-    Object.keys(layers).forEach(function(id){ if(map.hasLayer(layers[id])) v++; });
-    document.getElementById('cnt').innerText = v+'/'+t+' layers';
+    var t=overlayKeys.length, v=0;
+    overlayKeys.forEach(function(id){ if(lyr[id]&&map.hasLayer(lyr[id])) v++; });
+    var el=document.getElementById('cnt');
+    if(el) el.innerText=v+'/'+t+' layers';
 }
+
+map.addControl(new LegendControl());
+updCnt();
+
+// -------------------------------------------------------------------
+// TOOLTIPS
+// -------------------------------------------------------------------
+var i=0;
+lyr.gnd.eachLayer(function(l){
+    l.bindTooltip('<div style="color:#323232;font-size:10pt;font-family:\'Open Sans\',sans-serif;">'+(l.feature.properties['GND_N']||'')+'</div>',{permanent:true,offset:[0,-16],className:'css_GramaNiladhariDivisionBoundary_20'});
+    labels.push(l);totalMarkers+=1;l.added=true;addLabel(l,i);i++;
+});
+var i=0;
+lyr.dsd.eachLayer(function(l){
+    l.bindTooltip('<div style="color:#323232;font-size:10pt;font-family:\'Open Sans\',sans-serif;">'+(l.feature.properties['DSD_N']||'')+'</div>',{permanent:true,offset:[0,-16],className:'css_DivisionalSecretariatDivisionBoundary_21'});
+    labels.push(l);totalMarkers+=1;l.added=true;addLabel(l,i);i++;
+});
+var i=0;
+lyr.dist.eachLayer(function(l){
+    l.bindTooltip('<div style="color:#323232;font-size:10pt;font-family:\'Open Sans\',sans-serif;">'+(l.feature.properties['DISTRICT_N']||'')+'</div>',{permanent:true,offset:[0,-16],className:'css_DistrictBoundary_22'});
+    labels.push(l);totalMarkers+=1;l.added=true;addLabel(l,i);i++;
+});
+var i=0;
+lyr.prov.eachLayer(function(l){
+    l.bindTooltip('<div style="color:#323232;font-size:10pt;font-family:\'Open Sans\',sans-serif;">'+(l.feature.properties['PROVINCE_N']||'')+'</div>',{permanent:true,offset:[0,-16],className:'css_ProvienceBoundary_23'});
+    labels.push(l);totalMarkers+=1;l.added=true;addLabel(l,i);i++;
+});
+var i=0;
+lyr.proj.eachLayer(function(l){
+    l.bindTooltip('<div style="color:#323232;font-size:10pt;font-family:\'Open Sans\',sans-serif;">'+(l.feature.properties['SIDT_1']||'')+'</div>',{permanent:true,offset:[0,-16],className:'css_ProjectBoundary_24'});
+    labels.push(l);totalMarkers+=1;l.added=true;addLabel(l,i);i++;
+});
+
+L.ImageOverlay.include({getBounds:function(){return this._bounds;}});
+
+// Debounced label reset — only fires once after all bulk layer changes settle
+var _labelTimer = null;
+function scheduleResetLabels() {
+    if(_labelTimer) clearTimeout(_labelTimer);
+    _labelTimer = setTimeout(function(){
+        _labelTimer = null;
+        resetLabels([lyr.gnd,lyr.dsd,lyr.dist,lyr.prov,lyr.proj]);
+    }, 80);
+}
+
+resetLabels([lyr.gnd,lyr.dsd,lyr.dist,lyr.prov,lyr.proj]);
+map.on('zoomend', function(){ scheduleResetLabels(); });
+map.on('layeradd',    function(){ if(!_bulkMode) scheduleResetLabels(); });
+map.on('layerremove', function(){ if(!_bulkMode) scheduleResetLabels(); });
 </script>
 </body>
 </html>
