@@ -79,10 +79,70 @@
     .basemap-item:hover { background:#f9fafb; }
     .basemap-item input[type=radio] { width:13px; height:13px; accent-color:#2563eb; cursor:pointer; flex-shrink:0; }
     .basemap-item label { flex:1; cursor:pointer; color:#374151; line-height:1.3; }
+
+    /* ===== TITLE BAR ===== */
+    #title-bar {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        z-index: 1000;
+        background: linear-gradient(135deg, #1e3a5f, #1e6091);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 6px 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+        min-height: 52px;
+    }
+    #title-logo {
+        height: 38px;
+        width: auto;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+    #title-logo-placeholder {
+        width: 38px; height: 38px;
+        background: rgba(255,255,255,0.15);
+        border: 2px dashed rgba(255,255,255,0.5);
+        border-radius: 4px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 9px; color: rgba(255,255,255,0.7);
+        text-align: center; flex-shrink: 0; line-height: 1.2;
+    }
+    #title-divider { width:1px; height:36px; background:rgba(255,255,255,0.3); flex-shrink:0; }
+    #title-text-block { flex:1; overflow:hidden; }
+    #title-main { font-size:13px; font-weight:700; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #title-sub  { font-size:10px; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
+    /* Geser map ke bawah title bar */
+    #map { margin-top: 52px !important; height: calc(100% - 52px) !important; }
     </style>
     <title>Identification of Priority Area and Option for Sustainable Landscape Management (SLM) In Knuckles Mountain Region Sri Lanka</title>
 </head>
 <body>
+
+
+<div id="title-bar">
+
+    <img id="title-logo"
+         src="images/SLM.png"
+         alt="Logo"
+         onerror="this.style.display='none';document.getElementById('title-logo-placeholder').style.display='flex';">
+    <div id="title-logo-placeholder" style="display:none;">LOGO<br>HERE</div>
+
+    <div id="title-divider"></div>
+
+    <div id="title-text-block">
+        <div id="title-main">
+            Identification of Priority Area and Option for Sustainable Landscape Management (SLM) In Knuckles Mountain Region, Sri Lanka
+        </div>
+        <div id="title-sub">
+        
+        </div>
+    </div>
+
+</div>
+<!-- ================================================================ -->
+
 <div id="map"></div>
 <script src="js/leaflet.js"></script>
 <script src="js/leaflet-hash.js"></script>
